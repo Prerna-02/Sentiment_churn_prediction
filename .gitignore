@@ -6,3 +6,5 @@ node_modules/
 dist/
 .vscode/
 ml/artifacts/*
+data/raw/
+data/processed/

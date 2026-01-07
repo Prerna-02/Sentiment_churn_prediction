@@ -5,18 +5,14 @@ services:
     ports:
       - "9092:9092"
     environment:
-      # KRaft (no ZooKeeper)
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: "broker,controller"
       KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
-
-      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093"
-      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9092"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT"
       KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
       KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
-
-      # single-node dev settings
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -37,9 +33,39 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_TOPIC_RAW: reviews_raw
+      CSV_PATH: /data/amazon_sample.csv
+    volumes:
+      - ./data/processed/amazon:/data:ro
     depends_on:
       - kafka
-    restart: "no"
+
+  spark_streaming:
+    build:
+      context: ./services/spark_streaming
+    container_name: spark_streaming
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC_RAW: reviews_raw
+      KAFKA_TOPIC_ENRICHED: reviews_enriched
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: itd
+      MONGO_COLLECTION: reviews_enriched
+      # Force Spark to run PySpark with the same Python env we install deps into.
+      PYSPARK_PYTHON: /usr/local/bin/python3.11
+      PYSPARK_DRIVER_PYTHON: /usr/local/bin/python3.11
+
+    volumes:
+      - ./ml/artifacts:/models:ro
+      - ./shared:/opt/spark-app/app/shared:ro
+    depends_on:
+      - kafka
+      - mongo
+    command: >
+      /opt/spark/bin/spark-submit
+      --conf spark.driverEnv.PYTHONPATH=/opt/spark-app/app
+      --conf spark.executorEnv.PYTHONPATH=/opt/spark-app/app
+      --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1
+      /opt/spark-app/app/stream_job.py
 
 volumes:
   mongo_data:
