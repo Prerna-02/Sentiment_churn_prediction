@@ -1,5 +1,6 @@
 fastapi==0.115.6
 uvicorn==0.32.1
 pydantic==2.10.3
-numpy
-scikit-learn
+# Pinned ML deps to match Spark container for pickle compatibility
+numpy==2.2.1
+scikit-learn==1.5.2

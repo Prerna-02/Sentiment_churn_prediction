@@ -39,6 +39,22 @@ services:
     depends_on:
       - kafka
 
+  model_service:
+    build:
+      context: ./services/model_service
+    container_name: model_service
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_PATH: /models/sentiment_model_3class.pkl
+      MODEL_VERSION: hashing_sgd_3class_v1
+    volumes:
+      - ./ml/artifacts:/models:ro
+      - ./shared:/app/shared:ro
+    depends_on:
+      - kafka
+      - mongo
+
   spark_streaming:
     build:
       context: ./services/spark_streaming
@@ -50,16 +66,18 @@ services:
       MONGO_URI: mongodb://mongo:27017
       MONGO_DB: itd
       MONGO_COLLECTION: reviews_enriched
+      # Phase 6: call model_service for inference instead of local .pkl
+      MODEL_SERVICE_URL: http://model_service:8000
       # Force Spark to run PySpark with the same Python env we install deps into.
       PYSPARK_PYTHON: /usr/local/bin/python3.11
       PYSPARK_DRIVER_PYTHON: /usr/local/bin/python3.11
 
     volumes:
-      - ./ml/artifacts:/models:ro
       - ./shared:/opt/spark-app/app/shared:ro
     depends_on:
       - kafka
       - mongo
+      - model_service
     command: >
       /opt/spark/bin/spark-submit
       --conf spark.driverEnv.PYTHONPATH=/opt/spark-app/app

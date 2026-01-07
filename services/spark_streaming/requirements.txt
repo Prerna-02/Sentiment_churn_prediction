@@ -1,5 +1,4 @@
 pymongo==4.6.3
-# Pinned for deterministic inference + pickle compatibility.
-# The current artifact references numpy._core.*, which requires numpy>=2.
-numpy==2.2.1
-scikit-learn==1.5.2
+# Phase 6: no ML deps needed in Spark; inference happens in model_service
+requests==2.31.0
+kafka-python==2.0.2
