@@ -3,6 +3,7 @@
 
 import os
 import json
+import time
 import requests
 from typing import List, Dict
 
@@ -31,12 +32,51 @@ MODEL_SERVICE_URL = os.getenv("MODEL_SERVICE_URL", "http://model_service:8000")
 
 
 # -------------------------
-# Helper: call model_service for predictions
+# Helper: call model_service with retries
 # -------------------------
+def call_predict_with_retry(session: requests.Session, payload: Dict, max_retries: int = 2) -> Dict:
+    """
+    Call model_service /predict with retry logic.
+    
+    Args:
+        session: requests.Session for connection pooling
+        payload: JSON payload for /predict endpoint
+        max_retries: number of retry attempts (default 2)
+    
+    Returns:
+        Prediction dict with sentiment_label, sentiment_score, confidence, model_version
+    
+    Raises:
+        Exception if all retries fail
+    """
+    last_exception = None
+    
+    for attempt in range(max_retries + 1):  # 0, 1, 2 (total 3 attempts with 2 retries)
+        try:
+            resp = session.post(
+                f"{MODEL_SERVICE_URL}/predict",
+                json=payload,
+                timeout=3  # 3s timeout per attempt
+            )
+            resp.raise_for_status()
+            return resp.json()
+            
+        except Exception as e:
+            last_exception = e
+            if attempt < max_retries:
+                # Exponential backoff: 0.1s, 0.2s
+                backoff = 0.1 * (2 ** attempt)
+                time.sleep(backoff)
+            else:
+                # Final attempt failed
+                raise last_exception
+
+
 def get_predictions(rows: List[Dict]) -> List[Dict]:
     """
     Call model_service /predict for each row and attach predictions.
     Uses a session for connection pooling across the batch.
+    Implements retry logic with exponential backoff.
     """
     session = requests.Session()
     enriched = []
@@ -50,13 +90,7 @@ def get_predictions(rows: List[Dict]) -> List[Dict]:
         }
         
         try:
-            resp = session.post(
-                f"{MODEL_SERVICE_URL}/predict",
-                json=payload,
-                timeout=5
-            )
-            resp.raise_for_status()
-            pred = resp.json()
+            pred = call_predict_with_retry(session, payload, max_retries=2)
             
             # Merge original row with predictions
             enriched_row = {**row}
@@ -67,13 +101,13 @@ def get_predictions(rows: List[Dict]) -> List[Dict]:
             enriched.append(enriched_row)
             
         except Exception as e:
-            # Fallback: attach neutral sentiment on error
-            print(f"❌ Prediction failed for event {row.get('event_id')}: {e}")
+            # Fallback: attach unknown sentiment after retries exhausted
+            print(f"❌ Prediction failed for event {row.get('event_id')} after retries: {e}")
             enriched_row = {**row}
-            enriched_row["sentiment_label"] = "neutral"
-            enriched_row["sentiment_score"] = 0
-            enriched_row["confidence"] = 0.0
-            enriched_row["model_version"] = "error"
+            enriched_row["sentiment_label"] = "unknown"
+            enriched_row["sentiment_score"] = 0  # neutral fallback
+            enriched_row["confidence"] = 0.0  # no confidence
+            enriched_row["model_version"] = "error_after_retry"
             enriched.append(enriched_row)
     
     session.close()
@@ -146,6 +180,8 @@ def main():
     schema = StructType([
         StructField("event_id", StringType(), True),
         StructField("customer_id", StringType(), True),
+        StructField("product_id", StringType(), True),
+        StructField("product_name", StringType(), True),
         StructField("text", StringType(), True),
         StructField("channel", StringType(), True),
         StructField("timestamp_utc", StringType(), True),

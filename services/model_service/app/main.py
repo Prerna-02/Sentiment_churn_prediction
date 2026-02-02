@@ -7,15 +7,16 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-# Import the shared model wrapper
+# Import the shared model wrappers
 from shared.sentiment_model import SentimentModel3Class
+from shared.tfidf_sentiment_model import TfidfSentimentModel
 
 
 # -------------------------
 # Environment config
 # -------------------------
-MODEL_PATH = os.getenv("MODEL_PATH", "/models/sentiment_model_3class.pkl")
-MODEL_VERSION_ENV = os.getenv("MODEL_VERSION", "hashing_sgd_3class_v1")
+MODEL_PATH = os.getenv("MODEL_PATH", "/models/sentiment_model_tfidf_lr.pkl")
+MODEL_VERSION_ENV = os.getenv("MODEL_VERSION", "amazon_tfidf_lr_v1")
 
 
 # -------------------------
@@ -23,8 +24,8 @@ MODEL_VERSION_ENV = os.getenv("MODEL_VERSION", "hashing_sgd_3class_v1")
 # -------------------------
 app = FastAPI(
     title="Sentiment Model Service",
-    description="Real-time sentiment inference API for ITD pipeline (Phase 6)",
-    version="1.0.0"
+    description="Real-time sentiment inference API for ITD pipeline (Phase 6+)",
+    version="2.0.0"
 )
 
 # Global model instance (loaded once at startup)
@@ -39,9 +40,17 @@ async def load_model():
     if not model_file.exists():
         raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
     
-    model = SentimentModel3Class.load(MODEL_PATH)
-    print(f"✅ Model loaded from {MODEL_PATH}")
-    print(f"   Model version: {model.model_version}")
+    # Try loading as TF-IDF model first (new format)
+    try:
+        model = TfidfSentimentModel.load(MODEL_PATH)
+        print(f"✅ TF-IDF Model loaded from {MODEL_PATH}")
+        print(f"   Model version: {model.model_version}")
+    except (KeyError, AttributeError):
+        # Fall back to old format (SentimentModel3Class)
+        print(f"⚠️  New format failed, trying old format...")
+        model = SentimentModel3Class.load(MODEL_PATH)
+        print(f"✅ Legacy Model loaded from {MODEL_PATH}")
+        print(f"   Model version: {model.model_version}")
 
 
 # -------------------------
@@ -89,14 +98,22 @@ async def predict(request: PredictRequest):
     
     text = request.text or ""
     
-    # Call the model wrapper's predict_one method
-    # Returns: (label: str, score: int, confidence: float, probs: dict)
-    label, score, confidence, probs = model.predict_one(text)
-    
-    return PredictResponse(
-        sentiment_label=label,
-        sentiment_score=score,
-        confidence=confidence,
-        model_version=model.model_version
-    )
+    try:
+        # Call the model wrapper's predict_one method
+        # Returns: (label: str, score: int, confidence: float, probs: dict)
+        label, score, confidence, probs = model.predict_one(text)
+        
+        return PredictResponse(
+            sentiment_label=label,
+            sentiment_score=score,
+            confidence=confidence,
+            model_version=model.model_version
+        )
+    except Exception as e:
+        # Log error and return clear HTTP 500
+        print(f"❌ Prediction error: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Model inference failed: {type(e).__name__}: {str(e)}"
+        )
 

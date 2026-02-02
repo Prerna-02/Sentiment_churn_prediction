@@ -1,0 +1,21 @@
+📸 IMAGE ASSETS REQUIRED
+
+Please add the following images to this folder:
+
+1. university-logo.png
+   - Save the SP Jain School of Global Management logo here
+   - Recommended size: 400-600px width
+   - Format: PNG with transparent background preferred
+
+2. dashboard-screenshot.png
+   - Take a full-screen screenshot of your running dashboard
+   - Recommended resolution: 1920x1080 or higher
+   - Format: PNG or JPG
+   - Make sure the dashboard shows all key features clearly
+
+TIP: You can also use other image formats (jpg, jpeg) but make sure to update 
+the file extensions in index.html accordingly.
+
+Current references in index.html:
+- Line with university logo: <img src="images/university-logo.png" ...>
+- Line with dashboard: <img src="images/dashboard-screenshot.png" ...>

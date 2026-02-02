@@ -30,10 +30,12 @@ services:
     build:
       context: ./services/producer
     container_name: producer
+    restart: unless-stopped  # Auto-restart for continuous streaming
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_TOPIC_RAW: reviews_raw
       CSV_PATH: /data/amazon_sample.csv
+      PYTHONUNBUFFERED: 1  # Force Python output to appear immediately
     volumes:
       - ./data/processed/amazon:/data:ro
     depends_on:
@@ -46,14 +48,49 @@ services:
     ports:
       - "8000:8000"
     environment:
-      MODEL_PATH: /models/sentiment_model_3class.pkl
-      MODEL_VERSION: hashing_sgd_3class_v1
+      MODEL_PATH: /models/sentiment_model_tfidf_lr.pkl
+      MODEL_VERSION: amazon_tfidf_lr_v1
     volumes:
       - ./ml/artifacts:/models:ro
       - ./shared:/app/shared:ro
     depends_on:
       - kafka
       - mongo
+
+  api_service:
+    build:
+      context: ./services/api_service
+    container_name: api_service
+    ports:
+      - "8001:8001"
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: itd
+      MONGO_COLLECTION: reviews_enriched
+    depends_on:
+      - mongo
+
+  dashboard_api:
+    build:
+      context: ./services/dashboard_api
+    container_name: dashboard_api
+    ports:
+      - "3001:3001"
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: itd
+      MONGO_COLLECTION: reviews_enriched
+    depends_on:
+      - mongo
+
+  dashboard_frontend:
+    build:
+      context: ./services/dashboard_frontend
+    container_name: dashboard_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - dashboard_api
 
   spark_streaming:
     build:
@@ -82,6 +119,10 @@ services:
       /opt/spark/bin/spark-submit
       --conf spark.driverEnv.PYTHONPATH=/opt/spark-app/app
       --conf spark.executorEnv.PYTHONPATH=/opt/spark-app/app
+      --conf spark.driver.memory=2g
+      --conf spark.driver.maxResultSize=1g
+      --conf spark.executor.memory=1g
+      --conf spark.sql.streaming.maxOffsetsPerTrigger=100
       --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1
       /opt/spark-app/app/stream_job.py
 

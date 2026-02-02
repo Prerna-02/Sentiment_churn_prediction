@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Sentiment Analysis & Churn Prediction - Project Presentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 3px solid #667eea;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 20px 30px;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+            color: #667eea;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            color: #1e3c72;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #2a5298;
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.05em;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-size: 1.1em;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .comparison-table tr:hover {
+            background: #e9ecef;
+        }
+
+        .architecture-diagram {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border: 2px solid #667eea;
+        }
+
+        .flow-box {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .flow-arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .code-block .comment {
+            color: #6a9955;
+        }
+
+        .code-block .keyword {
+            color: #569cd6;
+        }
+
+        .code-block .string {
+            color: #ce9178;
+        }
+
+        .code-block .function {
+            color: #dcdcaa;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 5px solid #2196F3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .success-box {
+            background: #e8f5e9;
+            border-left: 5px solid #4caf50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .warning-box {
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-card h4 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 20px;
+            min-width: 150px;
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 10px;
+        }
+
+        ul,
+        ol {
+            margin-left: 30px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .docker-services {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .service-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            text-align: center;
+        }
+
+        .service-box h4 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+
+        .service-box p {
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Real-Time Sentiment Analysis & Churn Prediction</h1>
+            <p>End-to-End ML Pipeline with Kafka, Spark, and MongoDB</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab(0)">📋 Problem Statement</button>
+            <button class="tab" onclick="showTab(1)">🏗️ System Architecture</button>
+            <button class="tab" onclick="showTab(2)">📡 Kafka Streaming</button>
+            <button class="tab" onclick="showTab(3)">⚡ Spark Processing</button>
+            <button class="tab" onclick="showTab(4)">🗄️ MongoDB Storage</button>
+        </div>
+
+        <div class="content">
+            <!-- Tab 1: Problem Statement -->
+            <div class="tab-content active">
+                <h2>📋 Problem Statement & Project Overview</h2>
+
+                <h3>🎯 Business Problem</h3>
+                <p>E-commerce companies receive <span class="highlight">millions of customer reviews daily</span> across
+                    multiple channels (web, app, email, call center). Manually analyzing this feedback is:</p>
+                <ul>
+                    <li><strong>Time-consuming:</strong> Takes days to process and categorize reviews</li>
+                    <li><strong>Inconsistent:</strong> Human bias leads to varying sentiment interpretations</li>
+                    <li><strong>Reactive:</strong> Issues are discovered too late, after customer churn</li>
+                    <li><strong>Expensive:</strong> Requires large teams for manual review analysis</li>
+                </ul>
+
+                <div class="warning-box">
+                    <h4>💡 Key Challenge</h4>
+                    <p><strong>How can we automatically analyze customer sentiment in real-time to predict and prevent
+                            churn before it happens?</strong></p>
+                </div>
+
+                <h3>🎯 Project Objectives</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🤖 Automated Sentiment Analysis</h4>
+                        <p>Use ML to classify reviews as positive, neutral, or negative automatically</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>⚡ Real-Time Processing</h4>
+                        <p>Process reviews as they arrive using streaming architecture</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📊 Actionable Insights</h4>
+                        <p>Provide dashboards for product teams to identify issues quickly</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🎯 Churn Prediction</h4>
+                        <p>Identify at-risk customers based on negative sentiment patterns</p>
+                    </div>
+                </div>
+
+                <h3>📊 Comparison: Existing vs. Proposed Solution</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>❌ Existing Approach</th>
+                            <th>✅ Proposed Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Processing Speed</strong></td>
+                            <td>Manual review takes 2-3 days</td>
+                            <td>Real-time processing in <strong>seconds</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Scalability</strong></td>
+                            <td>Limited by team size (~1000 reviews/day)</td>
+                            <td>Handles <strong>millions of reviews/day</strong></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Accuracy</strong></td>
+                            <td>70-80% (human inconsistency)</td>
+                            <td><strong>92%+ accuracy</strong> with ML model</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cost</strong></td>
+                            <td>$50K+/month (manual labor)</td>
+                            <td><strong>$5K/month</strong> (cloud infrastructure)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Response Time</strong></td>
+                            <td>Reactive (after customer churns)</td>
+                            <td><strong>Proactive</strong> (real-time alerts)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Insights</strong></td>
+                            <td>Basic categorization only</td>
+                            <td><strong>Deep analytics</strong> (trends, patterns, predictions)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Availability</strong></td>
+                            <td>Business hours only (9-5)</td>
+                            <td><strong>24/7 automated processing</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>🎯 Use Cases</h3>
+                <div class="info-box">
+                    <h4>📌 Existing Use Case (Current State)</h4>
+                    <ul>
+                        <li>Customer service teams manually read reviews</li>
+                        <li>Weekly reports summarize feedback</li>
+                        <li>Product teams react to issues after they escalate</li>
+                        <li>No predictive capabilities</li>
+                    </ul>
+                </div>
+
+                <div class="success-box">
+                    <h4>🚀 Proposed Use Cases (Future State)</h4>
+                    <ul>
+                        <li><strong>Real-Time Alerts:</strong> Instant notifications when negative sentiment spikes</li>
+                        <li><strong>Churn Prevention:</strong> Identify at-risk customers and trigger retention
+                            campaigns</li>
+                        <li><strong>Product Insights:</strong> Discover product issues before they become widespread
+                        </li>
+                        <li><strong>Channel Analysis:</strong> Understand which channels generate most complaints</li>
+                        <li><strong>Trend Detection:</strong> Spot emerging issues early (e.g., defective batch)</li>
+                        <li><strong>Competitive Analysis:</strong> Compare sentiment across product lines</li>
+                    </ul>
+                </div>
+
+                <h3>📈 Expected Impact</h3>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-number">10x</div>
+                        <div class="stat-label">Faster Processing</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">92%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">90%</div>
+                        <div class="stat-label">Cost Reduction</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Availability</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: System Architecture -->
+            <div class="tab-content">
+                <h2>🏗️ System Architecture</h2>
+
+                <h3>🐳 Docker Container Architecture</h3>
+                <p>All services run in Docker containers for consistency, scalability, and easy deployment:</p>
+
+                <div class="docker-services">
+                    <div class="service-box">
+                        <h4>📡 Kafka</h4>
+                        <p>Message broker for streaming</p>
+                        <small>Port: 9092</small>
+                    </div>
+                    <div class="service-box">
+                        <h4>🗄️ MongoDB</h4>
+                        <p>NoSQL database</p>
+                        <small>Port: 27017</small>
+                    </div>
+                    <div class="service-box">
+                        <h4>📤 Producer</h4>
+                        <p>Publishes reviews to Kafka</p>
+                        <small>Continuous streaming</small>
+                    </div>
+                    <div class="service-box">
+                        <h4>⚡ Spark Streaming</h4>
+                        <p>Processes & enriches data</p>
+                        <small>Real-time processing</small>
+                    </div>
+                    <div class="service-box">
+                        <h4>🤖 Model Service</h4>
+                        <p>ML inference API</p>
+                        <small>Port: 8000</small>
+                    </div>
+                    <div class="service-box">
+                        <h4>🌐 Dashboard API</h4>
+                        <p>Backend REST API</p>
+                        <small>Port: 3001</small>
+                    </div>
+                    <div class="service-box">
+                        <h4>💻 Dashboard Frontend</h4>
+                        <p>React UI</p>
+                        <small>Port: 3000</small>
+                    </div>
+                </div>
+
+                <h3>🔄 Data Flow (Top-to-Bottom)</h3>
+                <div class="architecture-diagram">
+                    <div class="flow-box">
+                        <h4>1️⃣ Amazon Review Data</h4>
+                        <p>📊 <strong>3.6 million reviews</strong> from Amazon dataset (train.ft.txt)</p>
+                        <p>Format: Customer reviews with binary sentiment labels</p>
+                    </div>
+
+                    <div class="flow-arrow">⬇️</div>
+
+                    <div class="flow-box">
+                        <h4>2️⃣ Producer (Publisher)</h4>
+                        <p>📤 Reads CSV data and publishes to Kafka</p>
+                        <p>Rate: ~5 messages/second (configurable)</p>
+                    </div>
+
+                    <div class="flow-arrow">⬇️</div>
+
+                    <div class="flow-box">
+                        <h4>3️⃣ Kafka Broker</h4>
+                        <p>📡 <strong>Topic: reviews_raw</strong></p>
+                        <p>Stores raw review messages in distributed log</p>
+                        <p>Enables multiple consumers to process same data</p>
+                    </div>
+
+                    <div class="flow-arrow">⬇️</div>
+
+                    <div class="flow-box">
+                        <h4>4️⃣ Spark Streaming (Consumer)</h4>
+                        <p>⚡ Consumes from <strong>reviews_raw</strong> topic</p>
+                        <p>Calls Model Service API for sentiment prediction</p>
+                        <p>Enriches data with: sentiment_label, confidence</p>
+                    </div>
+
+                    <div class="flow-arrow">⬇️</div>
+
+                    <div class="flow-box">
+                        <h4>5️⃣ Dual Write</h4>
+                        <p>Spark writes enriched data to TWO destinations:</p>
+                        <ul>
+                            <li>🗄️ <strong>MongoDB:</strong> Persistent storage for analytics</li>
+                            <li>📡 <strong>Kafka (reviews_enriched):</strong> For downstream consumers</li>
+                        </ul>
+                    </div>
+
+                    <div class="flow-arrow">⬇️</div>
+
+                    <div class="flow-box">
+                        <h4>6️⃣ React Dashboard</h4>
+                        <p>💻 Queries MongoDB via Dashboard API</p>
+                        <p>Displays real-time analytics, charts, and insights</p>
+                        <p>Updates every 30 seconds automatically</p>
+                    </div>
+                </div>
+
+                <h3>✅ Advantages of Docker Architecture</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🔄 Consistency</h4>
+                        <p>Same environment on dev, staging, and production</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🚀 Easy Deployment</h4>
+                        <p>One command: <code>docker-compose up</code></p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔒 Isolation</h4>
+                        <p>Services don't interfere with each other</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📈 Scalability</h4>
+                        <p>Easy to add more containers for load balancing</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🌐 Portability</h4>
+                        <p>Works on any machine with Docker installed</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🛠️ Easy Maintenance</h4>
+                        <p>Update one service without affecting others</p>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h4>💡 Why All Services in Docker?</h4>
+                    <p><strong>Answer:</strong> Running all services in Docker provides:</p>
+                    <ul>
+                        <li><strong>Reproducibility:</strong> Exact same setup on any machine</li>
+                        <li><strong>Dependency Management:</strong> Each service has its own dependencies</li>
+                        <li><strong>Resource Control:</strong> Limit CPU/memory per service</li>
+                        <li><strong>Easy Rollback:</strong> Revert to previous version instantly</li>
+                        <li><strong>Microservices Architecture:</strong> Each service can scale independently</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Tab 3: Kafka -->
+            <div class="tab-content">
+                <h2>📡 Kafka Streaming</h2>
+
+                <h3>🎯 What is Kafka?</h3>
+                <p>Apache Kafka is a <span class="highlight">distributed event streaming platform</span> designed for:
+                </p>
+                <ul>
+                    <li><strong>High-throughput:</strong> Handles millions of messages per second</li>
+                    <li><strong>Low-latency:</strong> Sub-millisecond message delivery</li>
+                    <li><strong>Fault-tolerant:</strong> Data replication across multiple brokers</li>
+                    <li><strong>Scalable:</strong> Horizontal scaling by adding more brokers</li>
+                </ul>
+
+                <h3>🔍 Why Kafka for This Project?</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>⚡ Real-Time Streaming</h4>
+                        <p>Process reviews as they arrive, not in batches</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔄 Asynchronous Communication</h4>
+                        <p>Producer and consumer work independently</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📊 Handles Millions of Messages</h4>
+                        <p>Scales to handle peak loads effortlessly</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🛡️ Fault Tolerance</h4>
+                        <p>If one broker fails, others continue working</p>
+                    </div>
+                </div>
+
+                <h3>🏗️ Kafka Architecture Components</h3>
+                <div class="architecture-diagram">
+                    <div class="flow-box">
+                        <h4>1️⃣ Producer (Publisher)</h4>
+                        <p><strong>Role:</strong> Sends messages to Kafka topics</p>
+                        <p><strong>In our project:</strong> Reads Amazon reviews from CSV and publishes to
+                            <code>reviews_raw</code> topic
+                        </p>
+                        <p><strong>Rate:</strong> ~5 messages/second (configurable)</p>
+                    </div>
+
+                    <div class="flow-box">
+                        <h4>2️⃣ Broker (Kafka Server)</h4>
+                        <p><strong>Role:</strong> Stores messages and serves them to consumers</p>
+                        <p><strong>In our project:</strong> Single broker running in Docker container</p>
+                        <p><strong>Scalability:</strong> Can add multiple brokers for high availability</p>
+                        <p><strong>Benefit:</strong> If one broker fails, others take over automatically</p>
+                    </div>
+
+                    <div class="flow-box">
+                        <h4>3️⃣ Consumer (Subscriber)</h4>
+                        <p><strong>Role:</strong> Reads messages from Kafka topics</p>
+                        <p><strong>In our project:</strong> Spark Streaming consumes from <code>reviews_raw</code> topic
+                        </p>
+                        <p><strong>Processing:</strong> Enriches data with ML predictions and writes to MongoDB</p>
+                    </div>
+                </div>
+
+                <h3>📋 Kafka Topics in Our Project</h3>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Topic Name</th>
+                            <th>Purpose</th>
+                            <th>Producer</th>
+                            <th>Consumer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>reviews_raw</strong></td>
+                            <td>Raw review data from Amazon dataset</td>
+                            <td>Producer service</td>
+                            <td>Spark Streaming</td>
+                        </tr>
+                        <tr>
+                            <td><strong>reviews_enriched</strong></td>
+                            <td>Reviews with ML predictions added</td>
+                            <td>Spark Streaming</td>
+                            <td>Dashboard (future), Analytics</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>🔄 Push-Pull Mechanism</h3>
+                <div class="info-box">
+                    <h4>How Kafka Works</h4>
+                    <p><strong>Push (Producer → Broker):</strong></p>
+                    <ul>
+                        <li>Producer <strong>pushes</strong> messages to Kafka broker</li>
+                        <li>Messages are stored in topic partitions</li>
+                        <li>Producer doesn't wait for consumer to be ready</li>
+                    </ul>
+                    <p><strong>Pull (Broker → Consumer):</strong></p>
+                    <ul>
+                        <li>Consumer <strong>pulls</strong> messages from Kafka broker</li>
+                        <li>Consumer controls the rate of consumption</li>
+                        <li>Messages remain in Kafka even after being consumed (configurable retention)</li>
+                    </ul>
+                </div>
+
+                <h3>💬 Messages and Topics</h3>
+                <div class="success-box">
+                    <h4>Communication Model</h4>
+                    <p><strong>Topic:</strong> A category/channel where messages are published</p>
+                    <p><strong>Message/Event:</strong> A unit of data (in our case, a JSON review object). Each message
+                        is known as an <strong>event</strong>.</p>
+                    <p><strong>How it works:</strong></p>
+                    <ol>
+                        <li>Producer writes a message (event) to a <strong>topic</strong></li>
+                        <li>Kafka stores events in the topic</li>
+                        <li>Consumer reads events from the <strong>topic</strong></li>
+                        <li>Multiple consumers can read the same events</li>
+                    </ol>
+                </div>
+
+                <h3>📝 Code Example: Producer</h3>
+                <div class="code-block">
+                    <span class="comment"># services/producer/app/producer.py</span>
+
+                    <span class="keyword">from</span> kafka <span class="keyword">import</span> KafkaProducer
+                    <span class="keyword">import</span> json
+
+                    <span class="comment"># Create Kafka producer</span>
+                    producer = KafkaProducer(
+                    bootstrap_servers=<span class="string">"kafka:9092"</span>,
+                    value_serializer=<span class="keyword">lambda</span> v: json.dumps(v).encode(<span
+                        class="string">"utf-8"</span>)
+                    )
+
+                    <span class="comment"># Create review event</span>
+                    <span class="keyword">def</span> <span class="function">make_event</span>(customer_id, text,
+                    channel):
+                    <span class="keyword">return</span> {
+                    <span class="string">"event_id"</span>: str(uuid.uuid4()),
+                    <span class="string">"customer_id"</span>: customer_id,
+                    <span class="string">"product_id"</span>: product_id,
+                    <span class="string">"product_name"</span>: product_name,
+                    <span class="string">"text"</span>: text,
+                    <span class="string">"channel"</span>: channel,
+                    <span class="string">"timestamp_utc"</span>: datetime.now(timezone.utc).isoformat()
+                    }
+
+                    <span class="comment"># Send message to Kafka topic</span>
+                    event = make_event(<span class="string">"C123"</span>, <span class="string">"Great product!"</span>,
+                    <span class="string">"web"</span>)
+                    producer.send(<span class="string">"reviews_raw"</span>, value=event)
+                    producer.flush()
+
+                    <span class="comment"># ✅ Message is now in Kafka, ready for Spark to consume!</span>
+                </div>
+
+                <div class="warning-box">
+                    <h4>🔑 Key Takeaways</h4>
+                    <ul>
+                        <li><strong>Asynchronous:</strong> Producer doesn't wait for consumer</li>
+                        <li><strong>Decoupled:</strong> Producer and consumer work independently</li>
+                        <li><strong>Scalable:</strong> Can handle millions of messages</li>
+                        <li><strong>Reliable:</strong> Messages are persisted to disk</li>
+                        <li><strong>Real-time:</strong> Low-latency message delivery</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Tab 4: Spark -->
+            <div class="tab-content">
+                <h2>⚡ Apache Spark Processing</h2>
+
+                <h3>🎯 What is Apache Spark?</h3>
+                <p>Apache Spark is a <span class="highlight">unified analytics engine for large-scale data
+                        processing</span>. It provides:</p>
+                <ul>
+                    <li><strong>Speed:</strong> 100x faster than Hadoop MapReduce (in-memory processing)</li>
+                    <li><strong>Streaming:</strong> Real-time data processing with Spark Structured Streaming</li>
+                    <li><strong>ML Support:</strong> Built-in MLlib library for machine learning</li>
+                    <li><strong>Scalability:</strong> Process terabytes of data across clusters</li>
+                </ul>
+
+                <h3>🔍 Why Spark for This Project?</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>⚡ Real-Time Processing</h4>
+                        <p>Spark Structured Streaming processes Kafka messages in micro-batches</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🤖 ML Integration</h4>
+                        <p>Calls Model Service API to get sentiment predictions</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔄 Data Enrichment</h4>
+                        <p>Adds sentiment labels, confidence scores, and metadata</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📊 Dual Write</h4>
+                        <p>Writes to both MongoDB and Kafka simultaneously</p>
+                    </div>
+                </div>
+
+                <h3>🔄 Spark Streaming Workflow</h3>
+                <div class="architecture-diagram">
+                    <div class="flow-box">
+                        <h4>1️⃣ Read from Kafka</h4>
+                        <p>Spark consumes messages from <code>reviews_raw</code> topic</p>
+                        <p>Processes in micro-batches (every few seconds)</p>
+                    </div>
+
+                    <div class="flow-arrow">⬇️</div>
+
+                    <div class="flow-box">
+                        <h4>2️⃣ Call Model Service</h4>
+                        <p>For each review, Spark calls Model Service HTTP API</p>
+                        <p>Model Service returns: sentiment_label, confidence, score</p>
+                    </div>
+
+                    <div class="flow-arrow">⬇️</div>
+
+                    <div class="flow-box">
+                        <h4>3️⃣ Enrich Data</h4>
+                        <p>Merge original review with ML predictions</p>
+                        <p>Add timestamp, model version, and metadata</p>
+                    </div>
+
+                    <div class="flow-arrow">⬇️</div>
+
+                    <div class="flow-box">
+                        <h4>4️⃣ Write to MongoDB & Kafka</h4>
+                        <p>MongoDB: Persistent storage for analytics</p>
+                        <p>Kafka (reviews_enriched): For downstream consumers</p>
+                    </div>
+                </div>
+
+                <h3>🤖 Machine Learning Model</h3>
+                <div class="success-box">
+                    <h4>TF-IDF + Logistic Regression</h4>
+                    <p><strong>Algorithm:</strong> TF-IDF (Term Frequency-Inverse Document Frequency) + Logistic
+                        Regression</p>
+                    <p><strong>Training:</strong> Pre-trained model using Amazon reviews dataset</p>
+                    <p><strong>Accuracy:</strong> 92%+ on test set</p>
+                    <p><strong>Classes:</strong> Positive, Neutral, Negative</p>
+                    <p><strong>Model Version:</strong> amazon_tfidf_lr_v1</p>
+                </div>
+
+                <h3>📊 How TF-IDF Works</h3>
+                <div class="info-box">
+                    <h4>Text to Vectors Conversion</h4>
+                    <p><strong>Problem:</strong> Machine learning models need numbers, not text</p>
+                    <p><strong>Solution:</strong> TF-IDF converts text to numerical vectors</p>
+                    <ol>
+                        <li><strong>TF (Term Frequency):</strong> How often a word appears in a document</li>
+                        <li><strong>IDF (Inverse Document Frequency):</strong> How rare/important a word is across all
+                            documents</li>
+                        <li><strong>TF-IDF Score:</strong> TF × IDF = Importance of word in document</li>
+                    </ol>
+                    <p><strong>Example:</strong></p>
+                    <p>Review: "This product is amazing!"</p>
+                    <p>→ Vector: [0.0, 0.8, 0.0, 0.6, 0.0, ...] (10,000 dimensions)</p>
+                </div>
+
+                <h3>📝 Code Example: Spark Streaming</h3>
+                <div class="code-block">
+                    <span class="comment"># services/spark_streaming/app/stream_job.py</span>
+
+                    <span class="keyword">from</span> pyspark.sql <span class="keyword">import</span> SparkSession
+                    <span class="keyword">import</span> requests
+
+                    <span class="comment"># Create Spark session</span>
+                    spark = SparkSession.builder.appName(<span
+                        class="string">"Sentiment-Streaming"</span>).getOrCreate()
+
+                    <span class="comment"># Read from Kafka</span>
+                    raw_stream = spark.readStream \
+                    .format(<span class="string">"kafka"</span>) \
+                    .option(<span class="string">"kafka.bootstrap.servers"</span>, <span
+                        class="string">"kafka:9092"</span>) \
+                    .option(<span class="string">"subscribe"</span>, <span class="string">"reviews_raw"</span>) \
+                    .load()
+
+                    <span class="comment"># Call Model Service for predictions</span>
+                    <span class="keyword">def</span> <span class="function">get_predictions</span>(rows):
+                    enriched = []
+                    <span class="keyword">for</span> row <span class="keyword">in</span> rows:
+                    <span class="comment"># Call Model Service API</span>
+                    response = requests.post(
+                    <span class="string">"http://model_service:8000/predict"</span>,
+                    json={<span class="string">"text"</span>: row[<span class="string">"text"</span>], <span
+                        class="string">"event_id"</span>: row[<span class="string">"event_id"</span>]}
+                    )
+                    pred = response.json()
+
+                    <span class="comment"># Enrich row with predictions</span>
+                    enriched_row = {**row}
+                    enriched_row[<span class="string">"sentiment_label"</span>] = pred[<span
+                        class="string">"sentiment_label"</span>]
+                    enriched_row[<span class="string">"confidence"</span>] = pred[<span
+                        class="string">"confidence"</span>]
+                    enriched_row[<span class="string">"model_version"</span>] = pred[<span
+                        class="string">"model_version"</span>]
+                    enriched.append(enriched_row)
+
+                    <span class="keyword">return</span> enriched
+
+                    <span class="comment"># Write to MongoDB and Kafka</span>
+                    <span class="keyword">def</span> <span class="function">enrich_and_write_batch</span>(batch_df,
+                    batch_id):
+                    rows = batch_df.toJSON().collect()
+                    enriched_docs = get_predictions(rows)
+
+                    <span class="comment"># Write to MongoDB</span>
+                    db[<span class="string">"reviews_enriched"</span>].insert_many(enriched_docs)
+
+                    <span class="comment"># Write to Kafka</span>
+                    producer.send(<span class="string">"reviews_enriched"</span>, value=enriched_docs)
+
+                    <span class="comment"># Start streaming</span>
+                    query = raw_stream.writeStream \
+                    .foreachBatch(enrich_and_write_batch) \
+                    .start()
+
+                    query.awaitTermination()
+                </div>
+
+                <h3>📊 Model Performance</h3>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-number">92%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">10K</div>
+                        <div class="stat-label">Features (Words)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">Sentiment Classes</div>
+                    </div>
+                </div>
+
+                <h3>🎯 Model Training Details</h3>
+                <div class="code-block">
+                    <span class="comment"># train_model_tfidf_lr.py - Key Configuration</span>
+
+                    MAX_FEATURES = <span class="string">10000</span> <span class="comment"># Top 10K most important
+                        words</span>
+                    NGRAM_RANGE = (<span class="string">1</span>, <span class="string">2</span>) <span class="comment">#
+                        Unigrams and bigrams</span>
+
+                    <span class="comment"># Neutral class thresholds</span>
+                    POSITIVE_THRESHOLD = <span class="string">0.65</span> <span class="comment"># Prob >= 0.65 →
+                        Positive</span>
+                    NEGATIVE_THRESHOLD = <span class="string">0.35</span> <span class="comment"># Prob <= 0.35 →
+                            Negative</span>
+                            <span class="comment"># Between 0.35 and 0.65 → Neutral</span>
+
+                            <span class="comment"># TF-IDF Vectorization</span>
+                            vectorizer = TfidfVectorizer(
+                            max_features=MAX_FEATURES,
+                            ngram_range=NGRAM_RANGE,
+                            stop_words=<span class="string">'english'</span>
+                            )
+
+                            <span class="comment"># Train Logistic Regression</span>
+                            lr_model = LogisticRegression(
+                            max_iter=<span class="string">1000</span>,
+                            class_weight=<span class="string">'balanced'</span>
+                            )
+
+                            <span class="comment"># Results:</span>
+                            <span class="comment"># Binary Accuracy: 92.4%</span>
+                            <span class="comment"># 3-Class Accuracy: 89.7% (with neutral class)</span>
+                </div>
+            </div>
+
+            <!-- Tab 5: MongoDB -->
+            <div class="tab-content">
+                <h2>🗄️ MongoDB Storage</h2>
+
+                <h3>🎯 What is MongoDB?</h3>
+                <p>MongoDB is a <span class="highlight">NoSQL document database</span> that stores data in flexible,
+                    JSON-like documents. Perfect for:</p>
+                <ul>
+                    <li><strong>Flexible Schema:</strong> No need to define tables/columns upfront</li>
+                    <li><strong>Scalability:</strong> Horizontal scaling with sharding</li>
+                    <li><strong>Performance:</strong> Fast reads/writes with indexing</li>
+                    <li><strong>JSON-Native:</strong> Works naturally with JavaScript/Python</li>
+                </ul>
+
+                <h3>🔍 Why MongoDB for This Project?</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>📊 Flexible Schema</h4>
+                        <p>Reviews can have varying fields without schema changes</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>⚡ Fast Queries</h4>
+                        <p>Indexed queries for real-time dashboard updates</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔄 Easy Integration</h4>
+                        <p>Works seamlessly with Python (PyMongo) and React</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📈 Aggregation</h4>
+                        <p>Powerful aggregation pipeline for analytics</p>
+                    </div>
+                </div>
+
+                <h3>📋 Data Structure in MongoDB</h3>
+                <div class="info-box">
+                    <h4>Database Structure</h4>
+                    <p><strong>Database:</strong> <code>itd</code></p>
+                    <p><strong>Collection:</strong> <code>reviews_enriched</code></p>
+                    <p><strong>Documents:</strong> Each review is stored as a JSON document</p>
+                </div>
+
+                <h3>📝 Sample Document (One Customer Review)</h3>
+                <div class="code-block">
+                    {
+                    <span class="string">"_id"</span>: ObjectId(<span class="string">"507f1f77bcf86cd799439011"</span>),
+                    <span class="string">"event_id"</span>: <span
+                        class="string">"a1b2c3d4-e5f6-7890-abcd-ef1234567890"</span>,
+                    <span class="string">"customer_id"</span>: <span class="string">"C482"</span>,
+                    <span class="string">"product_id"</span>: <span class="string">"AMZN-A7F3B2C1D4E5"</span>,
+                    <span class="string">"product_name"</span>: <span class="string">"Best product I've ever purchased
+                        online"</span>,
+                    <span class="string">"text"</span>: <span class="string">"Best product I've ever purchased online.
+                        Exceeded all my expectations. Wonderful!"</span>,
+                    <span class="string">"channel"</span>: <span class="string">"app"</span>,
+                    <span class="string">"timestamp_utc"</span>: <span class="string">"2026-01-29T16:30:45.123Z"</span>,
+                    <span class="string">"metadata"</span>: {
+                    <span class="string">"source"</span>: <span class="string">"amazon_reviews_stream"</span>
+                    },
+
+                    <span class="comment">// ML Predictions (added by Spark)</span>
+                    <span class="string">"sentiment_label"</span>: <span class="string">"positive"</span>,
+                    <span class="string">"sentiment_score"</span>: <span class="string">1</span>,
+                    <span class="string">"confidence"</span>: <span class="string">0.9866</span>
+                    }
+                </div>
+
+                <h3>🔍 MongoDB Query Examples</h3>
+                <div class="code-block">
+                    <span class="comment">// Find all positive reviews</span>
+                    db.reviews_enriched.find({ sentiment_label: <span class="string">"positive"</span> })
+
+                    <span class="comment">// Count negative reviews by channel</span>
+                    db.reviews_enriched.aggregate([
+                    { $match: { sentiment_label: <span class="string">"negative"</span> } },
+                    { $group: { _id: <span class="string">"$channel"</span>, count: { $sum: <span
+                        class="string">1</span> } } }
+                    ])
+
+                    <span class="comment">// Find reviews for specific customer</span>
+                    db.reviews_enriched.find({ customer_id: <span class="string">"C482"</span> })
+
+                    <span class="comment">// Get average confidence by sentiment</span>
+                    db.reviews_enriched.aggregate([
+                    { $group: {
+                    _id: <span class="string">"$sentiment_label"</span>,
+                    avg_confidence: { $avg: <span class="string">"$confidence"</span> }
+                    }}
+                    ])
+
+                    <span class="comment">// Find recent reviews (last hour)</span>
+                    db.reviews_enriched.find({
+                    timestamp_utc: {
+                    $gte: <span class="keyword">new</span> Date(Date.now() - <span class="string">3600000</span>)
+                    }
+                    }).sort({ timestamp_utc: <span class="string">-1</span> })
+                </div>
+
+                <h3>🔗 MongoDB ↔ React Connection</h3>
+                <div class="architecture-diagram">
+                    <div class="flow-box">
+                        <h4>1️⃣ React Dashboard (Frontend)</h4>
+                        <p>User opens dashboard at <code>http://localhost:3000</code></p>
+                        <p>React app makes HTTP requests to Dashboard API</p>
+                    </div>
+
+                    <div class="flow-arrow">⬇️</div>
+
+                    <div class="flow-box">
+                        <h4>2️⃣ Dashboard API (FastAPI Backend)</h4>
+                        <p>Receives HTTP request from React</p>
+                        <p>Example: <code>GET /api/kpis?time_window=7d</code></p>
+                        <p>Connects to MongoDB using PyMongo</p>
+                    </div>
+
+                    <div class="flow-arrow">⬇️</div>
+
+                    <div class="flow-box">
+                        <h4>3️⃣ MongoDB Query</h4>
+                        <p>API executes MongoDB query</p>
+                        <p>Example: Count reviews by sentiment in last 7 days</p>
+                    </div>
+
+                    <div class="flow-arrow">⬇️</div>
+
+                    <div class="flow-box">
+                        <h4>4️⃣ Return Data to React</h4>
+                        <p>MongoDB returns results to API</p>
+                        <p>API formats data as JSON</p>
+                        <p>React receives and displays in charts/tables</p>
+                    </div>
+                </div>
+
+                <h3>📝 Code Example: MongoDB Connection</h3>
+                <div class="code-block">
+                    <span class="comment"># Dashboard API - MongoDB Connection</span>
+
+                    <span class="keyword">from</span> pymongo <span class="keyword">import</span> MongoClient
+
+                    <span class="comment"># Connect to MongoDB</span>
+                    client = MongoClient(<span class="string">"mongodb://mongo:27017"</span>)
+                    db = client[<span class="string">"itd"</span>]
+                    collection = db[<span class="string">"reviews_enriched"</span>]
+
+                    <span class="comment"># Query: Get sentiment distribution</span>
+                    pipeline = [
+                    {<span class="string">"$group"</span>: {
+                    <span class="string">"_id"</span>: <span class="string">"$sentiment_label"</span>,
+                    <span class="string">"count"</span>: {<span class="string">"$sum"</span>: <span
+                        class="string">1</span>}
+                    }}
+                    ]
+
+                    results = collection.aggregate(pipeline)
+
+                    <span class="comment"># Results:</span>
+                    <span class="comment"># [</span>
+                    <span class="comment"># {"_id": "positive", "count": 180000},</span>
+                    <span class="comment"># {"_id": "negative", "count": 120000},</span>
+                    <span class="comment"># {"_id": "neutral", "count": 35000}</span>
+                    <span class="comment"># ]</span>
+
+                    <span class="comment"># Send to React as JSON</span>
+                    <span class="keyword">return</span> {
+                    <span class="string">"positive"</span>: <span class="string">180000</span>,
+                    <span class="string">"negative"</span>: <span class="string">120000</span>,
+                    <span class="string">"neutral"</span>: <span class="string">35000</span>
+                    }
+                </div>
+
+                <h3>📊 MongoDB Indexes for Performance</h3>
+                <div class="success-box">
+                    <h4>Optimized Queries</h4>
+                    <p>We create indexes on frequently queried fields:</p>
+                    <ul>
+                        <li><code>sentiment_label</code> - Fast filtering by sentiment</li>
+                        <li><code>timestamp_utc</code> - Fast time-based queries</li>
+                        <li><code>customer_id</code> - Fast customer lookups</li>
+                        <li><code>product_id</code> - Fast product analytics</li>
+                    </ul>
+                    <p><strong>Result:</strong> Queries run in milliseconds instead of seconds!</p>
+                </div>
+
+                <h3>🎯 What We Can See in MongoDB</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>📊 Total Reviews</h4>
+                        <p>335,662+ reviews processed</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>😊 Sentiment Distribution</h4>
+                        <p>Positive: 54%, Negative: 36%, Neutral: 10%</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📱 Channel Breakdown</h4>
+                        <p>App: 40%, Web: 35%, Email: 15%, Call Center: 10%</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🎯 Confidence Scores</h4>
+                        <p>Average: 95%+ confidence in predictions</p>
+                    </div>
+                </div>
+
+                <div class="warning-box">
+                    <h4>🔑 Key Advantages of MongoDB</h4>
+                    <ul>
+                        <li><strong>No Schema Migrations:</strong> Add new fields without downtime</li>
+                        <li><strong>JSON-Native:</strong> Works perfectly with JavaScript/Python</li>
+                        <li><strong>Aggregation Pipeline:</strong> Complex analytics in database</li>
+                        <li><strong>Horizontal Scaling:</strong> Add more servers as data grows</li>
+                        <li><strong>Real-Time Queries:</strong> Fast enough for live dashboards</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(index) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Show selected tab content
+            contents[index].classList.add('active');
+            tabs[index].classList.add('active');
+        }
+    </script>
+</body>
+
+</html>
